@@ -31,7 +31,6 @@ unless $canvas_tasks_loaded
 
       # opt out
       npm_install = ENV["COMPILE_ASSETS_NPM_INSTALL"] != "0"
-      build_api_docs = ENV["COMPILE_ASSETS_API_DOCS"] != "0"
       build_css = ENV["COMPILE_ASSETS_CSS"] != "0"
       build_styleguide = ENV["COMPILE_ASSETS_STYLEGUIDE"] != "0"
       build_i18n = ENV["RAILS_LOAD_ALL_LOCALES"] != "0"
@@ -47,7 +46,6 @@ unless $canvas_tasks_loaded
         task "brand_configs:write" => ["js:gulp_rev"] if write_brand_configs
         task "css:compile" => ["js:gulp_rev"] if build_css
         task "css:styleguide" if build_styleguide
-        task "doc:api" if build_api_docs
         task "js:yarn_install" if npm_install
         task "js:gulp_rev" => [
           ("js:yarn_install" if npm_install),
