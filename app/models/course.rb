@@ -3517,16 +3517,29 @@ class Course < ActiveRecord::Base
   def self.add_setting(setting, opts = {})
     setting = setting.to_sym
     settings_options[setting] = opts
-    valid_keys = %i[boolean default inherited alias arbitrary]
+    valid_keys = %i[default inherited alias type]
     invalid_keys = opts.except(*valid_keys).keys
-    raise "invalid options - #{invalid_keys.inspect} (must be in #{valid_keys.inspect})" if invalid_keys.any?
+    raise "setting type for #{setting.inspect} must be set explicitly" unless opts[:type]
+    raise "invalid options for setting #{setting.inspect} - #{invalid_keys.inspect} (must be in #{valid_keys.inspect})" if invalid_keys.any?
 
-    cast_expression = "val.to_s.presence"
-    cast_expression = "val" if opts[:arbitrary]
-    if opts[:boolean]
-      opts[:default] ||= false
-      cast_expression = "Canvas::Plugin.value_to_boolean(val)"
-    end
+    "val" if opts[:arbitrary]
+    cast_expression = case opts[:type]
+                      in :number
+                        if opts[:default]
+                          unless opts[:default].instance_of?(Integer)
+                            raise "illegal default number value: #{opts[:default]}"
+                          end
+                        else
+                          opts[:default] = 0
+                        end
+                        "val"
+                      in :boolean
+                        opts[:default] ||= false
+                        "Canvas::Plugin.value_to_boolean(val)"
+                      in :any
+                        "val"
+                      end
+
     class_eval <<~RUBY, __FILE__, __LINE__ + 1
       def #{setting}
         if Course.settings_options[#{setting.inspect}][:inherited]
@@ -3559,7 +3572,7 @@ class Course < ActiveRecord::Base
         end
       end
     RUBY
-    alias_method "#{setting}?", setting if opts[:boolean]
+    alias_method "#{setting}?", setting if opts[:type] == :boolean
     if opts[:alias]
       alias_method opts[:alias], setting
       alias_method "#{opts[:alias]}=", "#{setting}="
@@ -3572,48 +3585,49 @@ class Course < ActiveRecord::Base
   # unfortunately we decided to pluralize this in the API after the fact...
   # so now we pluralize it everywhere except the actual settings hash and
   # course import/export :(
-  add_setting :hide_final_grade, alias: :hide_final_grades, boolean: true
-  add_setting :hide_sections_on_course_users_page, boolean: true, default: false
-  add_setting :hide_distribution_graphs, boolean: true
-  add_setting :allow_final_grade_override, boolean: false, default: false
-  add_setting :allow_student_discussion_topics, boolean: true, default: true
-  add_setting :allow_student_discussion_editing, boolean: true, default: true
-  add_setting :allow_student_forum_attachments, boolean: true, default: true
-  add_setting :allow_student_discussion_reporting, boolean: true, default: true
-  add_setting :allow_student_anonymous_discussion_topics, boolean: true, default: false
-  add_setting :show_total_grade_as_points, boolean: true, default: false
-  add_setting :filter_speed_grader_by_student_group, boolean: true, default: false
-  add_setting :lock_all_announcements, boolean: true, default: false, inherited: true
-  add_setting :large_roster, boolean: true, default: ->(c) { c.root_account.large_course_rosters? }
-  add_setting :course_format
-  add_setting :newquizzes_engine_selected
-  add_setting :image_id
-  add_setting :image_url
-  add_setting :banner_image_id
-  add_setting :banner_image_url
-  add_setting :organize_epub_by_content_type, boolean: true, default: false
-  add_setting :enable_offline_web_export, boolean: true, default: ->(c) { c.account.enable_offline_web_export? }
-  add_setting :is_public_to_auth_users, boolean: true, default: false
-  add_setting :overridden_course_visibility
+  add_setting :hide_final_grade, alias: :hide_final_grades, type: :boolean
+  add_setting :hide_sections_on_course_users_page, type: :boolean
+  add_setting :hide_distribution_graphs, type: :boolean
+  add_setting :allow_final_grade_override, type: :boolean
+  add_setting :allow_student_discussion_topics, type: :boolean, default: true
+  add_setting :allow_student_discussion_editing, type: :boolean, default: true
+  add_setting :allow_student_forum_attachments, type: :boolean, default: true
+  add_setting :allow_student_discussion_reporting, type: :boolean, default: true
+  add_setting :allow_student_anonymous_discussion_topics, type: :boolean
+  add_setting :show_total_grade_as_points, type: :boolean
+  add_setting :filter_speed_grader_by_student_group, type: :boolean
+  add_setting :lock_all_announcements, type: :boolean, inherited: true
+  add_setting :large_roster, type: :boolean, default: ->(c) { c.root_account.large_course_rosters? }
+  add_setting :course_format, type: :any
+  add_setting :newquizzes_engine_selected, type: :any
+  add_setting :image_id, type: :any
+  add_setting :image_url, type: :any
+  add_setting :banner_image_id, type: :any
+  add_setting :banner_image_url, type: :any
+  add_setting :organize_epub_by_content_type, type: :boolean
+  add_setting :enable_offline_web_export, type: :boolean, default: ->(c) { c.account.enable_offline_web_export? }
+  add_setting :is_public_to_auth_users, type: :boolean
+  add_setting :overridden_course_visibility, type: :any
 
-  add_setting :restrict_quantitative_data, boolean: true, default: false, inherited: true
-  add_setting :restrict_student_future_view, boolean: true, inherited: true
-  add_setting :restrict_student_past_view, boolean: true, inherited: true
+  add_setting :restrict_quantitative_data, type: :boolean, inherited: true
+  add_setting :restrict_student_future_view, type: :boolean, inherited: true
+  add_setting :restrict_student_past_view, type: :boolean, inherited: true
 
-  add_setting :timetable_data, arbitrary: true
-  add_setting :syllabus_master_template_id
-  add_setting :syllabus_course_summary, boolean: true, default: true
-  add_setting :syllabus_updated_at
+  add_setting :timetable_data, type: :any
+  add_setting :syllabus_master_template_id, type: :any
+  add_setting :syllabus_course_summary, type: :boolean, default: true
+  add_setting :syllabus_updated_at, type: :any
 
-  add_setting :enable_course_paces, boolean: true, default: false
+  add_setting :enable_course_paces, type: :boolean
 
-  add_setting :usage_rights_required, boolean: true, default: false, inherited: true
+  add_setting :usage_rights_required, type: :boolean, inherited: true
 
-  add_setting :course_color
-  add_setting :alt_name
+  add_setting :course_color, type: :any
 
-  add_setting :default_due_time, inherited: true
-  add_setting :conditional_release, default: false, boolean: true, inherited: true
+  add_setting :alt_name, type: :any
+
+  add_setting :default_due_time, inherited: true, type: :any
+  add_setting :conditional_release, type: :boolean, inherited: true
 
   def elementary_enabled?
     account.enable_as_k5_account?
@@ -4199,10 +4213,10 @@ class Course < ActiveRecord::Base
 
   CUSTOMIZABLE_PERMISSIONS.each do |key, cfg|
     if cfg[:as_bools]
-      add_setting :"public_#{key}", boolean: true, default: ->(c) { c.is_public || false }
-      add_setting :"public_#{key}_to_auth", boolean: true, default: ->(c) { c.is_public_to_auth_users || false }
+      add_setting :"public_#{key}", type: :boolean, default: ->(c) { c.is_public || false }
+      add_setting :"public_#{key}_to_auth", type: :boolean, default: ->(c) { c.is_public_to_auth_users || false }
     else
-      add_setting :"#{key}_visibility", default: ->(c) { c.course_visibility }
+      add_setting :"#{key}_visibility", type: :any, default: ->(c) { c.course_visibility }
     end
   end
 
