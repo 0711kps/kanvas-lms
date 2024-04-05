@@ -51,7 +51,6 @@ const {
   retryChunkLoading,
   setMoreEnvVars,
   timezoneData,
-  webpackHooks,
   webpackManifest,
 } = require('./webpack.plugins')
 
@@ -207,7 +206,6 @@ module.exports = {
     environmentVars,
     timezoneData,
     customSourceFileExtensions,
-    webpackHooks,
     controlAccessBetweenModules,
     setMoreEnvVars,
     retryChunkLoading,

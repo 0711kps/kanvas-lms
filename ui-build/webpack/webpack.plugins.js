@@ -31,7 +31,6 @@ const {RetryChunkLoadPlugin} = require('webpack-retry-chunk-load-plugin')
 const TerserPlugin = require('terser-webpack-plugin')
 
 const SourceFileExtensionsPlugin = require('./SourceFileExtensionsPlugin')
-const WebpackHooks = require('./webpackHooks')
 
 // determines which folder public assets are compiled to
 const webpackPublicPath = require('./webpackPublicPath')
@@ -64,15 +63,6 @@ exports.customSourceFileExtensions = new SourceFileExtensionsPlugin({
   include: sync(join(canvasDir, 'gems/plugins/*/package.json'), {absolute: true}),
   tmpDir: join(canvasDir, 'tmp/webpack-source-file-extensions'),
 })
-
-// hooks for webpack lifecycle (start, fail, done)
-// requires process.env.ENABLE_CANVAS_WEBPACK_HOOKS
-// write your own custom commands for:
-//   CANVAS_WEBPACK_START_HOOK
-//   CANVAS_WEBPACK_FAILED_HOOK
-//   CANVAS_WEBPACK_DONE_HOOK
-// cf. ui-build/webpack/webpackHooks/macNotifications.sh
-exports.webpackHooks = new WebpackHooks()
 
 // controls access between modules; enforces where you can import from
 //   i.e. can't import features into packages, or ui/shared into packages
