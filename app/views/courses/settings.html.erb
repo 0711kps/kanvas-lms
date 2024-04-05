@@ -597,7 +597,14 @@
         <div colspan="3">
           <%= f.text_area :public_description, :style => "height: 100px;", :disabled => !can_manage %>
         </div>
-      </div><div class="form-row">
+      </div>
+      <div class="form-row">
+        <div class="form-label"><label for="course_assignment_default_points_possible"><%= before_label('course_assignment_default_points_possible', 'default points possible for assignment') %></label></div>
+        <div colspan="1">
+          <%= f.number_field :assignment_default_points_possible, value: @context.assignment_default_points_possible, min: 0 %>
+        </div>
+      </div>
+      <div class="form-row">
         <div></div>
         <div colspan="3">
           <span class="self_enrollment_message" style="<%= hidden unless @context.self_enrollment_enabled? && !is_master_course %>">
