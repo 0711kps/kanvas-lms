@@ -3629,6 +3629,9 @@ class Course < ActiveRecord::Base
   add_setting :default_due_time, inherited: true, type: :any
   add_setting :conditional_release, type: :boolean, inherited: true
 
+  # this represent the default value when creating new assignment in a course
+  add_setting :assignment_default_points_possible, type: :number, default: 100
+
   def elementary_enabled?
     account.enable_as_k5_account?
   end
