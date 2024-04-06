@@ -411,7 +411,7 @@ class Assignment < ActiveRecord::Base
     return if points_possible.present?
     return unless grading_type_requires_points?
 
-    update!(points_possible: DEFAULT_POINTS_POSSIBLE)
+    update!(points_possible: @context.course.assignment_default_points_possible)
   end
 
   def self.clean_up_duplicating_assignments

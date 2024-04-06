@@ -147,6 +147,7 @@ module Api::V1::Assignment
     hash["lti_context_id"] = assignment.lti_context_id if assignment.has_attribute?(:lti_context_id)
     hash["course_id"] = assignment.context_id
     hash["name"] = assignment.title
+    hash["points_possible"] ||= assignment.course.assignment_default_points_possible
     hash["submission_types"] = assignment.submission_types_array
     hash["has_submitted_submissions"] = assignment.has_submitted_submissions?
     hash["due_date_required"] = assignment.due_date_required?
