@@ -1725,6 +1725,7 @@ class CoursesController < ApplicationController
       :enable_course_paces,
       :conditional_release
     )
+
     changes = changed_settings(@course.changes, @course.settings, old_settings)
 
     @course.delay_if_production(priority: Delayed::LOW_PRIORITY)
@@ -3086,6 +3087,13 @@ class CoursesController < ApplicationController
         update_grade_passback_setting(grade_passback_setting)
       end
 
+      if params_for_update.key?(:assignment_default_points_possible)
+        assignment_default_points_possible_setting = params_for_update.delete(:assignment_default_points_possible)
+        return unless authorized_action?(@course, @current_user, :manage_grades)
+
+        @course.assignment_default_points_possible = assignment_default_points_possible_setting
+      end
+
       unless @course.account.grants_right? @current_user, session, :manage_storage_quotas
         params_for_update.delete :storage_quota
         params_for_update.delete :storage_quota_mb
@@ -4164,7 +4172,8 @@ class CoursesController < ApplicationController
       :friendly_name,
       :enable_course_paces,
       :default_due_time,
-      :conditional_release
+      :conditional_release,
+      :assignment_default_points_possible
     )
   end
 

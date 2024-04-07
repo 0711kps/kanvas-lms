@@ -8985,6 +8985,7 @@ zh-Hant:
         course_code: 課程代碼
         course_color: 顏色
         course_description: 說明
+        course_assignment_default_points_possible: 預設作業可得分
         course_epub_export: "Epub 文檔導出"
         course_format: 格式
         course_lock_all_announcements: 停用關於通告的評論
